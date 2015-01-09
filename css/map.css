@@ -1,0 +1,38 @@
+html, body, #map {
+    height:100%;
+    width:100%;
+    padding:0px;
+    margin:0px;
+}
+
+.map-point-label {
+    background:#000;
+    border: 1px solid rgba(255,255,255,0.5);
+    color: #000;
+    /*font-weight:bold;*/
+    text-align:center;
+    border-radius:50%;
+    line-height:30px;
+}
+
+div.point-circle {
+    background-color: #000;
+    border-color: black;
+    border-radius: 5px;
+    border-style: solid;
+    width: 2px;
+    height: 2px;
+    text-align: right;
+}
+
+.leaflet-control-loader {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -40px;
+    margin-left: -50px;
+    height: 80px;
+    width: 100px;
+    border-radius: 10px;
+    background: url('leaflet-loader.gif') center center no-repeat rgba(0,0,0,0.8);
+}
