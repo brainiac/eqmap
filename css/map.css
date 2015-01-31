@@ -3,6 +3,17 @@ html, body, #map {
     width:100%;
     padding:0px;
     margin:0px;
+
+    font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+.map-list-element {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.sidebar-pane {
+    max-width: 200px;
 }
 
 .map-point-label {

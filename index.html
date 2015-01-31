@@ -4,15 +4,37 @@
 	<title>Test</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="css/leaflet.css" />
+	<link rel="stylesheet" href="css/leaflet-sidebar.min.css" />
 	<link rel="stylesheet" href="css/L.Control.MousePosition.css" />
 	<link rel="stylesheet" href="css/L.SimpleGraticule.css" />
 	<link rel="stylesheet" href="css/map.css" />
 </head>
 <body>
-	<div id="map"></div>
+	<div id="sidebar" class="sidebar collapsed">
+		<!-- Nav tabs -->
+		<ul class="sidebar-tabs" role="tablist">
+			<li><a href="#maps" role="tab"><i class="fa fa-map-marker"></i></a></li>
+			<li><a href="#profile" role="tab"><i class="fa fa-user"></i></a></li>
+			<li><a href="#messages" role="tab"><i class="fa fa-envelope"></i></a></li>
+			<li><a href="#settings" role="tab"><i class="fa fa-gear"></i></a></li>
+		</ul>
+
+		<!-- Tab panes -->
+		<div class="sidebar-content active">
+			<div class="sidebar-pane" id="maps">
+				<h1>Maps</h1>
+				<ul id="map-list"></ul>
+			</div>
+		</div>
+		<div class="sidebar-pane" id="profile"><h1>Profile</h1></div>
+		<div class="sidebar-pane" id="messages"><h1>Messages</h1></div>
+		<div class="sidebar-pane" id="settings"><h1>Settings</h1></div>
+	</div>
+	<div id="map" class="sidebar-map"></div>
 	<script src="js/leaflet.js"></script>
+	<script src="js/leaflet-sidebar.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 	<script src="js/L.Control.MousePosition.js"></script>
 	<script src="js/L.SimpleGraticule.js"></script>

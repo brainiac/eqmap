@@ -92,13 +92,8 @@ var MapObject = function(mapId) {
         redraw: 'moveend'
     })
     this.graticule.addTo(this.map);
-/*
-    gridLayer = {
-        "Grid": this.graticule
-    };
-    L.control.layers([], gridLayer, {
-        collapsed: false
-    }).addTo(this.map);*/
+
+    var sidebar = L.control.sidebar('sidebar').addTo(this.map);
 
     this.loaderControl = L.control.loader().addTo(this.map);
 }
@@ -278,5 +273,35 @@ var theMap;
 function begin()
 {
     theMap = new MapObject('map');
-    theMap.loadMapLayer('commonlands');
+
+    var loadMap = function(name) {
+        console.log("load: " + name);
+        theMap.loadMapLayer(name);
+    }
+
+    var createMapList = function(data) {
+        var mapList = $('#map-list');
+        for (var k in data) {
+            (function(k, v) {
+                var mapName = v;
+                $('<li/>', {
+                    'id': 'map-load-' + k,
+                    'class': 'map-list-element',
+                    'html': mapName,
+                    'click': function() { loadMap(mapName); }
+                }).appendTo(mapList);
+            })(k, data[k]);
+        }
+    };
+
+    // load list of maps
+    $.ajax({
+        type: 'GET',
+        url: 'maps.php',
+        dataType: 'json',
+        success: createMapList,
+        error: function(xhr, status, errorThrown) {
+            console.dir([xhr, status, errorThrown]);
+        }
+    });
 }
