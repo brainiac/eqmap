@@ -1,4 +1,3 @@
-var SCALE_FACTOR = 1000.0;
 
 function componentToHex(c) {
     c = typeof(c) === "string" ? parseInt(c) : c;
@@ -12,8 +11,8 @@ function rgbToHex(r, g, b) {
 
 function createPoint(x, y) {
     return L.latLng(
-        (typeof(x) === "string" ? parseFloat(x) : x) / SCALE_FACTOR,
-        (typeof(y) === "string" ? parseFloat(y) : y) / SCALE_FACTOR);
+        (typeof(y) === "string" ? -parseFloat(y) : -y),
+        (typeof(x) === "string" ? parseFloat(x) : x));
 }
 
 function createLabel(point, text) {
@@ -27,9 +26,18 @@ function createLabel(point, text) {
     return L.marker(point, {icon: icon, title: text});
 }
 
+function unionBounds(bounds1, bounds2) {
+    return [
+        Math.min(bounds1[0], bounds2[0]),
+        Math.min(bounds1[1], bounds2[1]),
+        Math.max(bounds1[2], bounds2[2]),
+        Math.max(bounds1[3], bounds2[3]),
+    ];
+}
+
 function createGridLayer() {
     var lines = [];
-    var d = 2, p = .1;
+    var d = 4, p = .1;
     for (var x = -d; x <= d + p; x += p) {
         lines.push([L.latLng(x, -d), L.latLng(x, d)]);
         lines.push([L.latLng(-d, x), L.latLng(d, x)]);
@@ -77,18 +85,30 @@ L.control.loader = function(options) {
 //------------------------------------------------------------------------------
 
 var MapObject = function(mapId) {
-    this.map = L.map(mapId, {crs: L.CRS.Simple});
+    this.map = L.map(mapId, {
+        crs: L.CRS.Simple,
+        zoom: 0,
+        minZoom: -3
+    });
     this.layers = [];
+    this.bounds = [0, 0, 0, 0];
 
     L.control.mousePosition({
         separator: ", ",
-        latFormatter: function(l) { return (l*SCALE_FACTOR).toFixed(2) },
-        lngFormatter: function(l) { return (l*SCALE_FACTOR).toFixed(2) }
+        latFormatter: function(l) { return (l).toFixed(2) },
+        lngFormatter: function(l) { return (-l).toFixed(2) },
     }).addTo(this.map);
-    
+
+    L.simpleGraticule({
+        interval: 100,
+        showOriginLabel: true,
+        showLabels: false,
+        redraw: 'moveend'
+    }).addTo(this.map);
+
     // Create grid and layer control
     var gridLayer = createGridLayer();
-    gridLayer.addTo(this.map);
+    //gridLayer.addTo(this.map);
 
     gridLayer = {
         "Grid": gridLayer
@@ -101,17 +121,22 @@ var MapObject = function(mapId) {
 }
 
 MapObject.prototype.fitView = function() {
-    this.map.fitBounds(L.latLngBounds(
-        L.latLng(-2000 / SCALE_FACTOR, -2000 / SCALE_FACTOR),
-        L.latLng( 1000 / SCALE_FACTOR,  2000 / SCALE_FACTOR)));
-    this.map.setZoom(9);
+    this.map.fitBounds([
+        [this.bounds[0], this.bounds[1]],
+        [this.bounds[2], this.bounds[3]]
+    ]);
+    var center = [(this.bounds[0] + this.bounds[2]) / 2,
+        (this.bounds[3] + this.bounds[1]) / 2];
+    this.map.panTo(center);
+    console.log(this.bounds);
+    console.log(center);
 }
 
 MapObject.prototype.getMap = function() {
     return this.map;
 }
 
-MapObject.prototype.addMapLayers = function(layers) {
+MapObject.prototype.addMapLayers = function(layers, bounds) {
     // layers is a dictionary of names and layers
     if (this.layersControl) {
         this.map.removeControl(this.layersControl);
@@ -130,14 +155,33 @@ MapObject.prototype.addMapLayers = function(layers) {
         this.layers.push(layer);
     }
 
+    this.bounds = unionBounds(this.bounds, bounds);
+
     this.layersControl = L.control.layers([], layers, {collapsed: false});
     this.layersControl.addTo(this.map);
+
+    this.fitView();
+}
+
+MapObject.prototype.clearMap = function() {
+    for (var i = 0; i < this.layers.length; i++) {
+        var layer = this.layers[i];
+        this.map.removeLayer(layer);
+        this.layersControl.removeLayer(layer);
+    }
+    this.layers = [];
+    if (this.layersControl) {
+        this.map.removeControl(this.layersControl);
+        this.layersControl = null;
+    }
+
+    this.bounds = [0, 0, 0, 0];
 }
 
 MapObject.prototype.loadMapLayer = function(filename) {
     var obj = this;
 
-    // todo: remove all map layers
+    this.clearMap();
 
     // creates a layerGroup given the contents from the map filename
     processMapData = function(data) {
@@ -145,9 +189,10 @@ MapObject.prototype.loadMapLayer = function(filename) {
 
         // lines grouped by color
         var linesByColor = {};
+        var bounds = [0, 0, 0, 0];
 
         if (data.length === 0) {
-            return layerGroup;
+            return [layerGroup, bounds];
         }
 
         // iterate over lines, parse each for a line or a point label
@@ -163,6 +208,12 @@ MapObject.prototype.loadMapLayer = function(filename) {
                 var p = [createPoint(pieces[1], pieces[2]),
                          createPoint(pieces[4], pieces[5])];
                 var c = rgbToHex(pieces[7], pieces[8], pieces[9]);
+                bounds = [
+                    Math.min(bounds[0], p[0].lat, p[1].lat),
+                    Math.min(bounds[1], p[0].lng, p[1].lng),
+                    Math.max(bounds[2], p[0].lat, p[1].lat),
+                    Math.max(bounds[3], p[0].lng, p[1].lng),
+                ];
 
                 if (!(c in linesByColor)) {
                     linesByColor[c] = Array();
@@ -184,7 +235,7 @@ MapObject.prototype.loadMapLayer = function(filename) {
             layerGroup.addLayer(lines);
         }
 
-        return layerGroup;
+        return [layerGroup, bounds];
     }
 
     // each map has a base and 3 layers
@@ -195,6 +246,7 @@ MapObject.prototype.loadMapLayer = function(filename) {
     };
     var completeCb = {
         layers: {},
+        bounds: {},
         object: obj,
         remaining: 4,
 
@@ -202,8 +254,14 @@ MapObject.prototype.loadMapLayer = function(filename) {
             --this.remaining;
             if (this.remaining == 0) {
                 console.log("done!");
+
+                // aggregate the bounds
+                var bounds = [0, 0, 0, 0];
+                for (var k in this.bounds) {
+                    bounds = unionBounds(bounds, this.bounds[k]);
+                }
                 this.object.loaderControl.hide();
-                this.object.addMapLayers(this.layers);
+                this.object.addMapLayers(this.layers, bounds);
             }
         }
     };
@@ -215,7 +273,8 @@ MapObject.prototype.loadMapLayer = function(filename) {
             return function(data) {
                 var layerGroup = processMapData(data);
 
-                completeCb.layers[k] = layerGroup;
+                completeCb.layers[k] = layerGroup[0];
+                completeCb.bounds[k] = layerGroup[1];
                 completeCb.complete();
             };
         })(k, maps[k]);
@@ -238,6 +297,5 @@ var theMap;
 function begin()
 {
     theMap = new MapObject('map');
-    theMap.loadMapLayer('poknowledge');
-    theMap.fitView();
+    theMap.loadMapLayer('commonlands');
 }
