@@ -35,20 +35,6 @@ function unionBounds(bounds1, bounds2) {
     ];
 }
 
-function createGridLayer() {
-    var lines = [];
-    var d = 4, p = .1;
-    for (var x = -d; x <= d + p; x += p) {
-        lines.push([L.latLng(x, -d), L.latLng(x, d)]);
-        lines.push([L.latLng(-d, x), L.latLng(d, x)]);
-    }
-    return L.multiPolyline(lines, {
-        color: "#777",
-        opacity: 0.5,
-        weight: 1
-    });
-}
-
 L.Control.Loader = L.Control.extend({
     onAdd: function(map) {
         this._map = map;
@@ -99,23 +85,20 @@ var MapObject = function(mapId) {
         lngFormatter: function(l) { return (-l).toFixed(2) },
     }).addTo(this.map);
 
-    L.simpleGraticule({
+    this.graticule = L.simpleGraticule({
         interval: 100,
         showOriginLabel: true,
         showLabels: false,
         redraw: 'moveend'
-    }).addTo(this.map);
-
-    // Create grid and layer control
-    var gridLayer = createGridLayer();
-    //gridLayer.addTo(this.map);
-
+    })
+    this.graticule.addTo(this.map);
+/*
     gridLayer = {
-        "Grid": gridLayer
+        "Grid": this.graticule
     };
     L.control.layers([], gridLayer, {
         collapsed: false
-    }).addTo(this.map);
+    }).addTo(this.map);*/
 
     this.loaderControl = L.control.loader().addTo(this.map);
 }
@@ -128,8 +111,6 @@ MapObject.prototype.fitView = function() {
     var center = [(this.bounds[0] + this.bounds[2]) / 2,
         (this.bounds[3] + this.bounds[1]) / 2];
     this.map.panTo(center);
-    console.log(this.bounds);
-    console.log(center);
 }
 
 MapObject.prototype.getMap = function() {
