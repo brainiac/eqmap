@@ -74,7 +74,7 @@ var MapObject = function(mapId) {
     this.map = L.map(mapId, {
         crs: L.CRS.Simple,
         zoom: 0,
-        minZoom: -3
+        minZoom: -5
     });
     this.layers = [];
     this.bounds = [0, 0, 0, 0];
@@ -124,10 +124,13 @@ MapObject.prototype.addMapLayers = function(layers, bounds) {
     }
     this.layers = [];
 
+    var foundContent = false;
     for (var layerName in layers) {
         var layer = layers[layerName];
-        if (layerName === "0")
+        if (layer.getLayers().length > 0 && !foundContent) {
             this.map.addLayer(layer);
+            foundContent = true;
+        }
         this.layers.push(layer);
     }
 
