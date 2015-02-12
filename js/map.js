@@ -15,10 +15,10 @@ function createPoint(x, y) {
         (typeof(x) === "string" ? parseFloat(x) : x));
 }
 
-function createLabel(point, text) {
+function createLabel(point, text, style) {
     text = text.replace("_", " ");
    var icon = L.divIcon({
-        className: 'point-circle',
+        className: style || 'point-circle',
         html: text,
         iconSize: [2, 2]
     });
@@ -96,6 +96,8 @@ var MapObject = function(mapId) {
     var sidebar = L.control.sidebar('sidebar').addTo(this.map);
 
     this.loaderControl = L.control.loader().addTo(this.map);
+
+    this.spawns = {}
 }
 
 MapObject.prototype.fitView = function() {
@@ -139,7 +141,12 @@ MapObject.prototype.addMapLayers = function(layers, bounds) {
     this.layersControl = L.control.layers([], layers, {collapsed: false});
     this.layersControl.addTo(this.map);
 
+    this.postAddMapLayers();
+
     this.fitView();
+}
+
+MapObject.prototype.postAddMapLayers = function() {
 }
 
 MapObject.prototype.clearMap = function() {
@@ -232,8 +239,6 @@ MapObject.prototype.loadMapLayer = function(filename) {
         complete: function() {
             --this.remaining;
             if (this.remaining == 0) {
-                console.log("done!");
-
                 // aggregate the bounds
                 var bounds = [0, 0, 0, 0];
                 for (var k in this.bounds) {
@@ -271,40 +276,24 @@ MapObject.prototype.loadMapLayer = function(filename) {
     }
 }
 
-var theMap;
+MapObject.prototype.addSpawn = function(spawn) {
 
-function begin()
-{
-    theMap = new MapObject('map');
 
-    var loadMap = function(name) {
-        console.log("load: " + name);
-        theMap.loadMapLayer(name);
+    /*var marker = L.marker(createPoint(spawn.x, spawn.y), {
+        'title': spawn.name,
+        'clickable': true
+        'icon': icon
+    });*/
+
+    var marker = createLabel([spawn.y, -spawn.x], spawn.name, 'map-marker-' + spawn.type);
+    marker.spawn = spawn;
+    this.spawns[spawn.id] = marker;
+    marker.addTo(this.map);
+}
+
+MapObject.prototype.updateSpawn = function(spawn) {
+    if (spawn.id in this.spawns) {
+        var marker = this.spawns[spawn.id];
+        marker.setLatLng(createPoint(spawn.x, spawn.y));
     }
-
-    var createMapList = function(data) {
-        var mapList = $('#map-list');
-        for (var k in data) {
-            (function(k, v) {
-                var mapName = v;
-                $('<li/>', {
-                    'id': 'map-load-' + k,
-                    'class': 'map-list-element',
-                    'html': mapName,
-                    'click': function() { loadMap(mapName); }
-                }).appendTo(mapList);
-            })(k, data[k]);
-        }
-    };
-
-    // load list of maps
-    $.ajax({
-        type: 'GET',
-        url: 'maps.php',
-        dataType: 'json',
-        success: createMapList,
-        error: function(xhr, status, errorThrown) {
-            console.dir([xhr, status, errorThrown]);
-        }
-    });
 }

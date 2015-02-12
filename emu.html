@@ -4,7 +4,11 @@
     <title>Test</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" href="jquery-ui-1.11.2.custom/jquery-ui.min.css" />
+    <link rel="stylesheet" href="jquery-ui-1.11.2.custom/jquery-ui.theme.css" />
     <link rel="stylesheet" href="css/leaflet.css" />
     <link rel="stylesheet" href="css/leaflet-sidebar.min.css" />
     <link rel="stylesheet" href="css/L.Control.MousePosition.css" />
@@ -33,26 +37,34 @@
         <div class="sidebar-pane" id="settings"><h1>Settings</h1></div>
     </div>
     <div id="map" class="sidebar-map"></div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    <script src="jquery-ui-1.11.2.custom/jquery-ui.min.js"></script>
     <script src="js/leaflet.js"></script>
     <script src="js/leaflet-sidebar.min.js"></script>
     <script src="js/raphael-min.js"></script>
     <script src="js/rlayer.js"></script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="js/L.Control.MousePosition.js"></script>
     <script src="js/L.SimpleGraticule.js"></script>
     <script src="js/util.js"></script>
     <script src="js/map.js"></script>
+    <script src="js/spawns.js"></script>
+    <script src="js/eqemu_websockets.js"></script>
     <script>
     var theMap;
+
+    function loadMap(name) {
+        theMap.loadMapLayer(name);
+        queryString.push('map', name);
+    }
 
     $(function() {
         theMap = new MapObject('map');
 
-        function loadMap(name) {
-            console.log("load: " + name);
-            theMap.loadMapLayer(name);
-            queryString.push('map', name);
-        }
+        MapObject.prototype.postAddMapLayers = function() {
+            //this.map.addLayer(new R.Marker([0, 0], {'fill': '#fff', 'stroke': '#000'}));
+        };
+
 
         var createMapList = function(data) {
             var mapList = $('#map-list');
@@ -80,18 +92,13 @@
             }
         });
 
-        function getParameterByName(name) {
-            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec(location.search);
-            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        }
-
         // read query string if value exists
         var startingMap = getParameterByName("map");
         if (startingMap) {
             loadMap(startingMap);
         }
+
+        startSockets();
     });
     </script>
 </body>

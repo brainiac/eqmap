@@ -47,3 +47,44 @@ div.point-circle {
     border-radius: 10px;
     background: url('leaflet-loader.gif') center center no-repeat rgba(0,0,0,0.8);
 }
+
+.map-marker-NPC {
+    background-color: #00f;
+    border-color: #00f;
+    border-radius: 5px;
+    border-style: solid;
+    width: 2px;
+    height: 2px;
+    text-align: right;
+
+}
+
+.map-marker-Client {
+    background-color: #f00;
+    border-color: #f00;
+    border-radius: 5px;
+    border-style: solid;
+    width: 2px;
+    height: 2px;
+    text-align: right;
+}
+
+.map-marker-Corpse {
+    background-color: #666;
+    border-color: #666;
+    border-radius: 5px;
+    border-style: solid;
+    width: 2px;
+    height: 2px;
+    text-align: right;
+}
+
+.map-marker-Door {
+    background-color: #0f0;
+    border-color: #0f0;
+    border-radius: 5px;
+    border-style: solid;
+    width: 2px;
+    height: 2px;
+    text-align: right;
+}
